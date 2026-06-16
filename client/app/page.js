@@ -17,7 +17,7 @@ export default function Home() {
           <span>Workflow<span className="text-blue-500">Pro</span></span>
         </div>
         <Link 
-          href="https://muapi.ai/access-keys"
+          href="https://fal.ai/dashboard/keys"
           target="_blank"
           className="bg-white/5 hover:bg-white/10 backdrop-blur-md border border-white/10 px-5 py-2 rounded-full text-sm font-medium transition-all"
         >

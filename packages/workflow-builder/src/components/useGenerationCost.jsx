@@ -13,7 +13,6 @@ export const useGenerationCost = (selectedModel, formValues) => {
 
     const delayDebounce = setTimeout(() => {
       setIsRefreshingCost(true);
-      // We use the direct 8000 port since workflow-demo doesn't proxy /app/ internally and muapiapp runs on 8000
       axios.post("/api/app/calculate_dynamic_cost", {
         task_name: selectedModel.id,
         payload: formValues

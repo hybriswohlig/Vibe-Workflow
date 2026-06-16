@@ -66,9 +66,8 @@ const UploadNode = ({ id, data, formValues, setFormValues, selectedModel, loadin
           setUploadProgress(percentCompleted);
         }
       })
-      .then(() => {
-        const prefix = "https://cdn.muapi.ai/";
-        const uploadedUrl = prefix + fields.key;
+      .then((uploadResponse) => {
+        const uploadedUrl = uploadResponse.data?.url || `${window.location.origin}/uploads/${fields.key}`;
         setFormValues(prev => ({ ...prev, [type]: uploadedUrl }));
 
         setTimeout(() => {

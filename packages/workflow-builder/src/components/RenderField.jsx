@@ -80,8 +80,8 @@ const RenderField = ({ fieldName, meta, idx, formValues, setFormValues, handleCh
           setUploadProgress(percentCompleted);
         }
       })
-      .then(() => {
-        const uploadedUrl = `https://cdn.muapi.ai/${fields.key}`;
+      .then((uploadResponse) => {
+        const uploadedUrl = uploadResponse.data?.url || `${window.location.origin}/uploads/${fields.key}`;
         setFormValues((prev) => { 
           const current = prev[field];
           const updatedValue = fieldSchema.type === 'array'

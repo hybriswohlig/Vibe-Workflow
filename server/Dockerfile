@@ -22,6 +22,7 @@ COPY --from=builder /root/.local /home/appuser/.local
 ENV PATH=/home/appuser/.local/bin:$PATH
 
 COPY --chown=appuser:appgroup app ./app
+RUN mkdir -p /app/data && chown -R appuser:appgroup /app/data
 
 USER appuser
 EXPOSE 8000

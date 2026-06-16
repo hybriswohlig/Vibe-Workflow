@@ -869,7 +869,7 @@ export const presets = [
     title: "Image Generator & Editor",
     description: "Simple text to image Generation and Editing with Wan 2.5",
     icon: "image",
-    image: "https://cdn.muapi.ai/assets/demos/bbb516800e1145f09b9a109d73afbe2c.png",
+    image: "https://placehold.co/1024x576/png?text=Demo+Asset",
     nodes: [
       {
         id: "text1",
@@ -908,10 +908,10 @@ export const presets = [
           outputs: [
             {
               type: "image_url",
-              value: "https://cdn.muapi.ai/assets/demos/6e3f3a27d9d14d978fb9c22aa2289a7c.png"
+              value: "https://placehold.co/1024x576/png?text=Demo+Asset"
             }
           ],
-          resultUrl: "https://cdn.muapi.ai/assets/demos/6e3f3a27d9d14d978fb9c22aa2289a7c.png"
+          resultUrl: "https://placehold.co/1024x576/png?text=Demo+Asset"
         },
         type: "imageNode"
       },
@@ -947,7 +947,7 @@ export const presets = [
           formValues: {
             prompt: "Enhance the lighting to be more cinematic with stronger rim light and subtle volumetric fog. Increase contrast and depth, add more glowing holographic elements around the subject, slightly darken the background for focus, improve facial realism and sharpness, maintain photorealistic style and premium sci-fi mood.",
             images_list: [
-              "https://cdn.muapi.ai/assets/demos/6e3f3a27d9d14d978fb9c22aa2289a7c.png"
+              "https://placehold.co/1024x576/png?text=Demo+Asset"
             ],
             width: 2048,
             height: 2048,
@@ -955,10 +955,10 @@ export const presets = [
           outputs: [
             {
               type: "image_url",
-              value: "https://cdn.muapi.ai/assets/demos/bbb516800e1145f09b9a109d73afbe2c.png"
+              value: "https://placehold.co/1024x576/png?text=Demo+Asset"
             }
           ],
-          resultUrl: "https://cdn.muapi.ai/assets/demos/bbb516800e1145f09b9a109d73afbe2c.png"
+          resultUrl: "https://placehold.co/1024x576/png?text=Demo+Asset"
         },
         type: "imageNode"
       }
@@ -995,7 +995,7 @@ export const presets = [
     title: "Video Generator",
     description: "Simple Video Generation with Seedance Lite",
     icon: "video",
-    image: "https://cdn.muapi.ai/assets/demos/3283a83b5e374ca781f298b04a9e7640.png",
+    image: "https://placehold.co/1024x576/png?text=Demo+Asset",
     nodes: [
       {
         id: "text1",
@@ -1034,10 +1034,10 @@ export const presets = [
           outputs: [
             {
               type: "image_url",
-              value: "https://cdn.muapi.ai/assets/demos/3283a83b5e374ca781f298b04a9e7640.png"
+              value: "https://placehold.co/1024x576/png?text=Demo+Asset"
             }
           ],
-          resultUrl: "https://cdn.muapi.ai/assets/demos/3283a83b5e374ca781f298b04a9e7640.png"
+          resultUrl: "https://placehold.co/1024x576/png?text=Demo+Asset"
         },
         type: "imageNode"
       },
@@ -1051,7 +1051,7 @@ export const presets = [
           },
           formValues: {
             prompt: "Animate the scene with slow cinematic camera movement, subtle parallax, and smooth forward motion. Holographic elements gently pulse and shift, light rays move naturally through fog, floating structures subtly rotate, ultra-smooth transitions, realistic motion blur, film-grade animation, cinematic pacing, premium tech showcase style.",
-            image_url: "https://cdn.muapi.ai/assets/demos/3283a83b5e374ca781f298b04a9e7640.png",
+            image_url: "https://placehold.co/1024x576/png?text=Demo+Asset",
             resolution: "720p",
             duration: 5,
             camera_fixed: false,
@@ -1059,10 +1059,10 @@ export const presets = [
           outputs: [
             {
               type: "video_url",
-              value: "https://cdn.muapi.ai/assets/demos/91b35ba94f75485c8f196c5a91c14d68.mp4"
+              value: "https://placehold.co/1024x576/png?text=Demo+Asset"
             }
           ],
-          resultUrl: "https://cdn.muapi.ai/assets/demos/91b35ba94f75485c8f196c5a91c14d68.mp4"
+          resultUrl: "https://placehold.co/1024x576/png?text=Demo+Asset"
         },
         type: "videoNode"
       }
@@ -1136,10 +1136,10 @@ export const presets = [
           outputs: [
             {
               type: "audio_url",
-              value: "https://cdn.muapi.ai/assets/demos/84827b58c95f49bc926024543f661b61.mp3"
+              value: "https://placehold.co/1024x576/png?text=Demo+Asset"
             }
           ],
-          resultUrl: "https://cdn.muapi.ai/assets/demos/84827b58c95f49bc926024543f661b61.mp3"
+          resultUrl: "https://placehold.co/1024x576/png?text=Demo+Asset"
         },
         type: "audioNode"
       }
@@ -1160,7 +1160,7 @@ export const presets = [
     title: "LLM Image Captioning",
     description: "Generate a prompt from an image with GPT-5",
     icon: "text",
-    image: "https://cdn.muapi.ai/assets/demos/6a287f2ae6b849d5adca28fa0ea2cfd2.png",
+    image: "https://placehold.co/1024x576/png?text=Demo+Asset",
     nodes: [
       {
         id: "image1",
@@ -1171,15 +1171,15 @@ export const presets = [
             name: "Input Image"
           },
           formValues: {
-            image_url: "https://cdn.muapi.ai/assets/demos/6a287f2ae6b849d5adca28fa0ea2cfd2.png"
+            image_url: "https://placehold.co/1024x576/png?text=Demo+Asset"
           },
           outputs: [
             {
               type: "image_url",
-              value: "https://cdn.muapi.ai/assets/demos/6a287f2ae6b849d5adca28fa0ea2cfd2.png"
+              value: "https://placehold.co/1024x576/png?text=Demo+Asset"
             }
           ],
-          resultUrl: "https://cdn.muapi.ai/assets/demos/6a287f2ae6b849d5adca28fa0ea2cfd2.png",
+          resultUrl: "https://placehold.co/1024x576/png?text=Demo+Asset",
         },
         type: "imageNode"
       },
@@ -1193,7 +1193,7 @@ export const presets = [
           },
           formValues: {
             prompt: "Provide a detailed prompt of this image, capturing as many elements as possible. Include specifics about the colors, textures, any people or objects present, and the setting. Describe the atmosphere, any notable features or interactions, and the overall mood of the scene.",
-            image_url: "https://cdn.muapi.ai/assets/demos/6a287f2ae6b849d5adca28fa0ea2cfd2.png"
+            image_url: "https://placehold.co/1024x576/png?text=Demo+Asset"
           },
           outputs: [
             {
