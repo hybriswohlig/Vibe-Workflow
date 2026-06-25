@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { FaPause, FaPlay, FaVolumeMute, FaVolumeUp } from "react-icons/fa";
+import { toast } from "react-hot-toast";
 
 const AudioPlayer = ({ src, className }) => {
   const audioRef = useRef(null);
@@ -14,10 +15,20 @@ const AudioPlayer = ({ src, className }) => {
     if (!audioRef.current) return;
     if (isPlaying) {
       audioRef.current.pause();
+      setIsPlaying(false);
     } else {
-      audioRef.current.play();
+      const playPromise = audioRef.current.play();
+      if (playPromise?.then) {
+        playPromise
+          .then(() => setIsPlaying(true))
+          .catch(() => {
+            setIsPlaying(false);
+            toast.error("This audio cannot be played.");
+          });
+      } else {
+        setIsPlaying(true);
+      }
     }
-    setIsPlaying(!isPlaying);
   };
 
   const handleEnded = () => {
@@ -178,4 +189,3 @@ const AudioPlayer = ({ src, className }) => {
 };
 
 export default AudioPlayer;
-

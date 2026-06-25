@@ -1059,10 +1059,10 @@ export const presets = [
           outputs: [
             {
               type: "video_url",
-              value: "https://placehold.co/1024x576/png?text=Demo+Asset"
+              value: "https://d3adwkbyhxyrtq.cloudfront.net/webassets/videomodels/seedance-v2.0-i2v.mp4"
             }
           ],
-          resultUrl: "https://placehold.co/1024x576/png?text=Demo+Asset"
+          resultUrl: "https://d3adwkbyhxyrtq.cloudfront.net/webassets/videomodels/seedance-v2.0-i2v.mp4"
         },
         type: "videoNode"
       }
@@ -1136,10 +1136,10 @@ export const presets = [
           outputs: [
             {
               type: "audio_url",
-              value: "https://placehold.co/1024x576/png?text=Demo+Asset"
+              value: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
             }
           ],
-          resultUrl: "https://placehold.co/1024x576/png?text=Demo+Asset"
+          resultUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
         },
         type: "audioNode"
       }

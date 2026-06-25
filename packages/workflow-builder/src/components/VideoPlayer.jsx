@@ -25,7 +25,13 @@ const VideoPlayer = ({
     e?.stopPropagation();
     if (!videoRef.current) return;
     if (videoRef.current.paused) {
-      videoRef.current.play();
+      const playPromise = videoRef.current.play();
+      if (playPromise?.catch) {
+        playPromise.catch(() => {
+          setIsPlaying(false);
+          toast.error("This video cannot be played.");
+        });
+      }
     } else {
       videoRef.current.pause();
     }

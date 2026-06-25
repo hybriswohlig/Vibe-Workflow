@@ -1925,7 +1925,9 @@ const NodeFlow = ({ initialNodeSchemas, initialWorkflowData }) => {
 
   const onPaneClick = useCallback(() => {
     setContextMenu(null);
-  }, []);
+    setDropDown(0);
+    setNodes((nds) => nds.map((n) => ({ ...n, selected: false })));
+  }, [setNodes]);
 
   const getNewNodePosition = (lastNode) => {
     if (!lastNode) return { x: 250, y: 250 };
@@ -2413,7 +2415,8 @@ const NodeFlow = ({ initialNodeSchemas, initialWorkflowData }) => {
             type="button"
             suppressHydrationWarning={true}
             className="absolute top-2 right-2 text-zinc-400 hover:text-white cursor-pointer w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/10 transition-all duration-200"
-            onClick={() => {
+            onClick={(e) => {
+              e.stopPropagation();
               setNodes((nds) => nds.map((n) => ({ ...n, selected: false })));
             }}
           >
@@ -2823,7 +2826,7 @@ const NodeFlow = ({ initialNodeSchemas, initialWorkflowData }) => {
       {interactionMode && (
         <ChatWidget
           isOpen={isChatOpen}
-          toggleChat={() => setIsChatOpen(!isChatOpen)}
+          toggleChat={() => setIsChatOpen((open) => !open)}
           messages={chatMessages}
           onSendMessage={handleSendMessage}
           isLoading={isChatLoading}

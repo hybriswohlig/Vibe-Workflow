@@ -292,7 +292,7 @@ const ChatWidget = ({ isOpen, toggleChat, messages, onSendMessage, isLoading, on
   };
 
   return (
-    <div ref={widgetRef} className="fixed bottom-10 right-10 z-50 flex flex-col items-end gap-2 font-sans">
+    <div ref={widgetRef} className="fixed bottom-10 right-10 z-[80] flex flex-col items-end gap-2 font-sans">
       {isOpen && (
         <div className={`${isWide ? 'w-[800px]' : 'w-[380px]'} max-w-[100vw] h-[600px] max-h-[100%] flex flex-col bg-[#0B0F17]/95 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden transition-all duration-300 animate-in slide-in-from-bottom-5 fade-in text-left`}>
           <div className="flex items-center justify-between p-4 bg-gradient-to-r from-purple-600/20 to-blue-600/20 border-b border-white/10">
