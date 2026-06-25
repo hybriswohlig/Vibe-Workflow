@@ -41,3 +41,7 @@ ENV/
 # IDEs
 .vscode/
 .idea/
+
+# Workflow assistant runtime data and Codex home (contains credentials/caches)
+server/.assistant-home/
+server/data/

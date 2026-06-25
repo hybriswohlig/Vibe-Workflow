@@ -35,6 +35,7 @@ services:
       PUBLIC_API_BASE_URL: ${PUBLIC_API_BASE_URL:-http://localhost:8000}
       OPENAI_MEDIA_COMMAND: ${OPENAI_MEDIA_COMMAND:-}
       GROK_MEDIA_COMMAND: ${GROK_MEDIA_COMMAND:-}
+      WORKFLOW_ASSISTANT_COMMAND: ${WORKFLOW_ASSISTANT_COMMAND:-}
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health')"]
       interval: 30s
