@@ -19,18 +19,25 @@ DATA_DIR = BASE_DIR / "data"
 WORKFLOWS_DIR = DATA_DIR / "workflows"
 RUNS_DIR = DATA_DIR / "runs"
 UPLOADS_DIR = DATA_DIR / "uploads"
+ARCHITECT_DIR = DATA_DIR / "architect"
 
 FAL_KEY = os.getenv("FAL_KEY") or os.getenv("FAL_API_KEY")
 PUBLIC_API_BASE_URL = os.getenv("PUBLIC_API_BASE_URL", "http://localhost:8000")
 OPENAI_MEDIA_COMMAND = os.getenv("OPENAI_MEDIA_COMMAND") or os.getenv("OPENAI_IMAGE_COMMAND")
 GROK_MEDIA_COMMAND = os.getenv("GROK_MEDIA_COMMAND")
+WORKFLOW_ASSISTANT_URL = os.getenv("WORKFLOW_ASSISTANT_URL")
+WORKFLOW_ASSISTANT_COMMAND = (
+    os.getenv("WORKFLOW_ASSISTANT_COMMAND")
+    or os.getenv("CODEX_ASSISTANT_COMMAND")
+    or os.getenv("GROK_ASSISTANT_COMMAND")
+)
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
 def _ensure_dirs() -> None:
-    for path in (WORKFLOWS_DIR, RUNS_DIR, UPLOADS_DIR):
+    for path in (WORKFLOWS_DIR, RUNS_DIR, UPLOADS_DIR, ARCHITECT_DIR):
         path.mkdir(parents=True, exist_ok=True)
 
 
@@ -59,6 +66,10 @@ def _workflow_path(workflow_id: str) -> Path:
 
 def _run_path(run_id: str) -> Path:
     return RUNS_DIR / f"{run_id}.json"
+
+
+def _architect_path(request_id: str) -> Path:
+    return ARCHITECT_DIR / f"{request_id}.json"
 
 
 def _load_workflow(workflow_id: str) -> dict:
@@ -649,22 +660,95 @@ async def get_workflow_last_run(workflow_id: str):
 
 
 async def architect_workflow_helper(payload: dict):
-    return {
-        "request_id": str(uuid.uuid4()),
+    request_id = str(uuid.uuid4())
+    result = {
+        "request_id": request_id,
         "status": "completed",
-        "message": "Local workflow architect is not configured after removing MuAPI.",
+        "message": (
+            "Workflow assistant is not configured. Set WORKFLOW_ASSISTANT_COMMAND "
+            "to a Codex/Grok-backed command that reads JSON from stdin and returns "
+            "JSON with message, suggestions, and optionally workflow."
+        ),
         "suggestions": [],
         "workflow": None,
     }
+
+    if WORKFLOW_ASSISTANT_URL:
+        try:
+            async with httpx.AsyncClient(timeout=3600) as client:
+                response = await client.post(WORKFLOW_ASSISTANT_URL, json=payload)
+                response.raise_for_status()
+                command_result = response.json()
+            result.update(
+                {
+                    "message": command_result.get("message")
+                    or command_result.get("content")
+                    or "",
+                    "suggestions": command_result.get("suggestions", []),
+                    "workflow": command_result.get("workflow"),
+                }
+            )
+            for key in ("backend", "details", "error"):
+                if key in command_result:
+                    result[key] = command_result[key]
+        except Exception as exc:
+            result.update(
+                {
+                    "status": "completed",
+                    "message": f"Workflow assistant failed: {exc}",
+                }
+            )
+    elif WORKFLOW_ASSISTANT_COMMAND:
+        try:
+            completed = subprocess.run(
+                shlex.split(WORKFLOW_ASSISTANT_COMMAND),
+                input=json.dumps(payload),
+                text=True,
+                capture_output=True,
+                timeout=3600,
+                check=True,
+            )
+            try:
+                command_result = json.loads(completed.stdout)
+            except json.JSONDecodeError:
+                command_result = {"message": completed.stdout.strip()}
+
+            result.update(
+                {
+                    "message": command_result.get("message")
+                    or command_result.get("content")
+                    or completed.stdout.strip(),
+                    "suggestions": command_result.get("suggestions", []),
+                    "workflow": command_result.get("workflow"),
+                }
+            )
+            for key in ("backend", "details", "error"):
+                if key in command_result:
+                    result[key] = command_result[key]
+        except Exception as exc:
+            detail = exc.stderr if isinstance(exc, subprocess.CalledProcessError) else str(exc)
+            result.update(
+                {
+                    "status": "completed",
+                    "message": f"Workflow assistant failed: {detail}",
+                }
+            )
+
+    _write_json(_architect_path(request_id), result)
+    return {"request_id": request_id, "status": result["status"]}
 
 
 async def poll_architect_result_helper(id: str):
-    return {
-        "status": "completed",
-        "message": "Local workflow architect is not configured after removing MuAPI.",
-        "suggestions": [],
-        "workflow": None,
-    }
+    return _read_json(
+        _architect_path(id),
+        {
+            "request_id": id,
+            "status": "processing",
+            "message": "",
+            "suggestions": [],
+            "workflow": None,
+        },
+    )
 
 
 async def delete_node_run_by_id_helper(node_run_id: str):
