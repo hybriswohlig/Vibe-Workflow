@@ -654,7 +654,10 @@ async def template_workflow_helper(workflow_id: str, payload: dict):
 
 
 async def cloudfront_signed_url_helper(payload: dict):
-    return {"url": payload.get("url")}
+    url = payload.get("url")
+    # Return both keys: the frontend reads `signed_url`. There is no CloudFront
+    # signing anymore (local/self-hosted) — the URL is served as-is.
+    return {"signed_url": url, "url": url}
 
 
 async def generate_thumbnail_helper(workflow_id: str, payload: dict):

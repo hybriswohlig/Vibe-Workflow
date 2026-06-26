@@ -836,36 +836,61 @@ export const apiNodeModels = [
   }
 ];
 
+const extensionForUrl = (url) => {
+  const clean = String(url).split("?")[0].split("#")[0];
+  const match = clean.match(/\.(png|jpe?g|webp|gif|svg|mp4|webm|mov|mp3|wav|m4a|ogg)$/i);
+  return match ? match[0].toLowerCase() : "";
+};
+
+const extensionForType = (type = "") => {
+  const map = {
+    "image/png": ".png", "image/jpeg": ".jpg", "image/webp": ".webp", "image/gif": ".gif",
+    "video/mp4": ".mp4", "video/webm": ".webm",
+    "audio/mpeg": ".mp3", "audio/wav": ".wav", "audio/mp4": ".m4a",
+  };
+  return map[type.split(";")[0].trim()] || "";
+};
+
 export const downloadFile = async (file_url, filename = "download") => {
   if (!file_url) {
     toast.error("File URL not found");
     return;
   }
 
-  const response = await axios.post("/api/workflow/cloudfront-signed-url",
-    {
-      url: file_url
-    }
-  );
-
-  const signed_url = response.data.signed_url;
+  // The signed-url endpoint just echoes the URL for self-hosted setups; fall back
+  // to the original URL if it is unavailable or returns an unexpected shape.
+  let target = file_url;
+  try {
+    const { data } = await axios.post("/api/workflow/cloudfront-signed-url", { url: file_url });
+    target = data?.signed_url || data?.url || file_url;
+  } catch {
+    target = file_url;
+  }
 
   try {
-    const response = await fetch(signed_url, { mode: "cors" });
+    const response = await fetch(target, { mode: "cors" });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const blob = await response.blob();
-    const url = window.URL.createObjectURL(blob);
+    const ext = extensionForUrl(target) || extensionForType(blob.type);
+    const name = ext && !filename.toLowerCase().endsWith(ext) ? `${filename}${ext}` : filename;
 
+    const url = window.URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = filename;
+    link.download = name;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-
     window.URL.revokeObjectURL(url);
   } catch (err) {
-    console.error("Download failed:", err);
-    toast.error("Download failed");
+    // CORS-restricted (e.g. external provider URLs) — fall back to opening the file
+    // in a new tab so the user can still save it.
+    console.error("Download failed, opening in new tab:", err);
+    try {
+      window.open(target, "_blank", "noopener");
+    } catch {
+      toast.error("Download failed");
+    }
   }
 };
 
