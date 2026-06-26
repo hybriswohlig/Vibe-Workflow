@@ -14,6 +14,8 @@ from typing import Optional
 import httpx
 from fastapi import HTTPException
 
+from app.utils import model_capabilities as caps
+
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 DATA_DIR = BASE_DIR / "data"
 WORKFLOWS_DIR = DATA_DIR / "workflows"
@@ -289,7 +291,7 @@ def _schema_for(properties: dict, required: Optional[list[str]] = None) -> dict:
             "schemas": {
                 "input_data": {
                     "properties": deepcopy(properties),
-                    "required": required or ["prompt"],
+                    "required": required if required is not None else ["prompt"],
                 }
             }
         }
@@ -297,14 +299,18 @@ def _schema_for(properties: dict, required: Optional[list[str]] = None) -> dict:
 
 
 def _model_dict(model_ids: list[str], properties: dict) -> dict:
-    return {
-        model_id: {
-            "id": model_id,
-            "name": _model_name(model_id),
-            **_schema_for(properties if "passthrough" not in model_id else _passthrough_schema(model_id)),
-        }
-        for model_id in model_ids
-    }
+    models = {}
+    for model_id in model_ids:
+        spec = caps.properties_and_required(model_id)
+        if spec is not None:
+            props, required = spec
+            schema = _schema_for(props, required)
+        elif "passthrough" in model_id:
+            schema = _schema_for(_passthrough_schema(model_id))
+        else:
+            schema = _schema_for(properties)
+        models[model_id] = {"id": model_id, "name": _model_name(model_id), **schema}
+    return models
 
 
 def _passthrough_schema(model_id: str) -> dict:
@@ -471,6 +477,15 @@ async def _execute_node(node: dict, run_id: str, node_results: dict) -> dict:
     }
 
     try:
+        # Validate/clean inputs against the model's declared capabilities (no-op for
+        # unmapped models, passthrough nodes, and utility nodes).
+        allowed = None if (model.endswith("passthrough") or category == "utility") else caps.allowed_keys(model)
+        if allowed is not None:
+            missing = [key for key in caps.required_keys(model) if not params.get(key)]
+            if missing:
+                raise HTTPException(status_code=400, detail=caps.missing_input_message(model, missing))
+            params = {key: value for key, value in params.items() if key in allowed}
+
         if model.endswith("passthrough"):
             value = (
                 params.get("prompt")

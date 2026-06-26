@@ -1,0 +1,172 @@
+{
+  "schema_version": "1.0",
+  "description": "Per-model input capabilities for Vibe Workflow media models. Standalone, dependency-free artifact so other programs can consume the same source of truth. A model is mapped to a profile; a profile is an ordered list of input fields. Each field references the field_library and may override `required` and `max` (array cap). Models not listed in `models` fall back to the generic per-category schema.",
+  "field_library": {
+    "prompt": { "title": "Prompt", "type": "string" },
+    "system_prompt": { "title": "System Prompt", "type": "string" },
+    "image_url": { "title": "Image URL", "type": "string", "field": "image" },
+    "last_image": { "title": "Last Image", "type": "string", "field": "image" },
+    "images_list": { "title": "Images", "type": "array", "field": "images_list", "max": 4 },
+    "video_url": { "title": "Video URL", "type": "string", "field": "video" },
+    "videos_list": { "title": "Videos", "type": "array", "field": "videos_list", "max": 4 },
+    "audio_url": { "title": "Audio URL", "type": "string", "field": "audio" },
+    "aspect_ratio_image": { "name": "aspect_ratio", "title": "Aspect Ratio", "type": "enum", "enum": ["1:1", "16:9", "9:16", "4:3", "3:4"], "default": "1:1" },
+    "aspect_ratio_video": { "name": "aspect_ratio", "title": "Aspect Ratio", "type": "enum", "enum": ["16:9", "9:16", "1:1", "4:3", "3:4"], "default": "16:9" }
+  },
+  "profiles": {
+    "image_passthrough": { "modality": "image", "fields": ["image_url"] },
+    "image_t2i": {
+      "modality": "image",
+      "fields": [{ "ref": "prompt", "required": true }, "aspect_ratio_image"]
+    },
+    "image_t2i_ref": {
+      "modality": "image",
+      "note": "text-to-image that also accepts optional reference/edit images",
+      "fields": [{ "ref": "prompt", "required": true }, { "ref": "images_list", "max": 4 }, "aspect_ratio_image"]
+    },
+    "image_edit": {
+      "modality": "image",
+      "fields": [{ "ref": "prompt", "required": true }, { "ref": "image_url", "required": true }, "aspect_ratio_image"]
+    },
+    "image_ref": {
+      "modality": "image",
+      "note": "reference / multi-image driven generation",
+      "fields": [{ "ref": "prompt", "required": true }, { "ref": "images_list", "max": 6 }, "aspect_ratio_image"]
+    },
+    "video_passthrough": { "modality": "video", "fields": ["video_url"] },
+    "video_t2v": {
+      "modality": "video",
+      "fields": [{ "ref": "prompt", "required": true }, "aspect_ratio_video"]
+    },
+    "video_t2v_optimg": {
+      "modality": "video",
+      "note": "text-to-video that optionally accepts a start image (e.g. Grok Imagine video)",
+      "fields": [{ "ref": "prompt", "required": true }, "image_url", "aspect_ratio_video"]
+    },
+    "video_i2v": {
+      "modality": "video",
+      "fields": [{ "ref": "prompt", "required": true }, { "ref": "image_url", "required": true }, "last_image", "aspect_ratio_video"]
+    },
+    "video_ref": {
+      "modality": "video",
+      "fields": [{ "ref": "prompt", "required": true }, { "ref": "images_list", "max": 4 }, "aspect_ratio_video"]
+    },
+    "video_v2v": {
+      "modality": "video",
+      "fields": [{ "ref": "video_url", "required": true }, "prompt"]
+    },
+    "video_reframe": {
+      "modality": "video",
+      "fields": [{ "ref": "video_url", "required": true }, "aspect_ratio_video"]
+    },
+    "text_passthrough": { "modality": "text", "fields": ["prompt"] },
+    "text_only": {
+      "modality": "text",
+      "fields": [{ "ref": "prompt", "required": true }, "system_prompt"]
+    },
+    "text_vision": {
+      "modality": "text",
+      "fields": [{ "ref": "prompt", "required": true }, "system_prompt", "image_url", { "ref": "images_list", "max": 6 }]
+    },
+    "audio_passthrough": { "modality": "audio", "fields": ["audio_url"] },
+    "audio_tts": {
+      "modality": "audio",
+      "note": "text/prompt to speech or music",
+      "fields": [{ "ref": "prompt", "required": true }]
+    },
+    "audio_from_audio": {
+      "modality": "audio",
+      "note": "needs a source audio (extend / remix / voice clone)",
+      "fields": [{ "ref": "prompt", "required": true }, { "ref": "audio_url", "required": true }]
+    }
+  },
+  "models": {
+    "image-passthrough": "image_passthrough",
+    "gpt-image-2": "image_t2i_ref",
+    "gpt-image-1.5": "image_t2i_ref",
+    "gpt-image-1-mini": "image_t2i_ref",
+    "nano-banana": "image_t2i",
+    "nano-banana-edit": "image_edit",
+    "nano-banana-pro": "image_t2i",
+    "nano-banana-pro-edit": "image_edit",
+    "flux-schnell": "image_t2i",
+    "flux-2-dev": "image_t2i",
+    "flux-2-dev-edit": "image_edit",
+    "flux-2-flex": "image_t2i",
+    "flux-2-flex-edit": "image_edit",
+    "flux-2-pro": "image_t2i",
+    "flux-2-pro-edit": "image_edit",
+    "bytedance-seedream-v4": "image_t2i",
+    "bytedance-seedream-edit-v4": "image_edit",
+    "bytedance-seedream-v4.5": "image_t2i",
+    "bytedance-seedream-v4.5-edit": "image_edit",
+    "wan2.5-text-to-image": "image_t2i",
+    "wan2.5-image-edit": "image_edit",
+    "wan2.6-text-to-image": "image_t2i",
+    "wan2.6-image-edit": "image_edit",
+    "qwen-image": "image_t2i",
+    "qwen-image-edit-2511": "image_edit",
+    "qwen-image-edit": "image_edit",
+    "qwen-image-edit-plus": "image_ref",
+    "qwen-image-edit-plus-lora": "image_ref",
+    "z-image-turbo": "image_t2i",
+    "chroma-image": "image_t2i",
+    "kling-o1-text-to-image": "image_t2i",
+    "kling-o1-edit-image": "image_edit",
+    "grok-imagine-image": "image_t2i_ref",
+    "grok-imagine-image-quality": "image_t2i_ref",
+    "hunyuan-image-2.1": "image_t2i",
+    "hunyuan-image-3.0": "image_t2i",
+    "google-imagen4": "image_t2i",
+    "google-imagen4-fast": "image_t2i",
+    "google-imagen4-ultra": "image_t2i",
+    "midjourney-v7-text-to-image": "image_t2i",
+    "midjourney-v7-image-to-image": "image_edit",
+    "midjourney-v7-omni-reference": "image_ref",
+    "midjourney-v7-style-reference": "image_ref",
+    "vidu-q2-text-to-image": "image_t2i",
+    "vidu-q2-reference-to-image": "image_ref",
+    "video-passthrough": "video_passthrough",
+    "seedance-lite-i2v": "video_i2v",
+    "seedance-lite-t2v": "video_t2v",
+    "seedance-pro-t2v": "video_t2v",
+    "seedance-pro-i2v": "video_i2v",
+    "seedance-v1.5-pro-i2v": "video_i2v",
+    "seedance-v1.5-pro-t2v": "video_t2v",
+    "veo3.1-image-to-video": "video_i2v",
+    "veo3.1-text-to-video": "video_t2v",
+    "wan2.2-text-to-video": "video_t2v",
+    "wan2.2-image-to-video": "video_i2v",
+    "wan2.5-text-to-video": "video_t2v",
+    "wan2.5-image-to-video": "video_i2v",
+    "wan2.6-text-to-video": "video_t2v",
+    "wan2.6-image-to-video": "video_i2v",
+    "openai-sora": "video_t2v",
+    "openai-sora-2-text-to-video": "video_t2v",
+    "openai-sora-2-image-to-video": "video_i2v",
+    "openai-sora-2-pro-text-to-video": "video_t2v",
+    "openai-sora-2-pro-image-to-video": "video_i2v",
+    "kling-o1-text-to-video": "video_t2v",
+    "kling-o1-image-to-video": "video_i2v",
+    "grok-imagine-video": "video_t2v_optimg",
+    "grok-imagine-video-1.5": "video_t2v_optimg",
+    "hunyuan-text-to-video": "video_t2v",
+    "hunyuan-image-to-video": "video_i2v",
+    "midjourney-v7-image-to-video": "video_i2v",
+    "vidu-q2-reference": "video_ref",
+    "luma-modify-video": "video_v2v",
+    "luma-flash-reframe": "video_reframe",
+    "text-passthrough": "text_passthrough",
+    "any-llm": "text_vision",
+    "openrouter-vision": "text_vision",
+    "gpt-5-nano": "text_vision",
+    "gpt-5-mini": "text_vision",
+    "audio-passthrough": "audio_passthrough",
+    "suno-create-music": "audio_tts",
+    "suno-extend-music": "audio_from_audio",
+    "suno-remix-music": "audio_from_audio",
+    "minimax-voice-clone": "audio_from_audio",
+    "minimax-speech-2.6-hd": "audio_tts",
+    "minimax-speech-2.6-turbo": "audio_tts"
+  }
+}
