@@ -48,6 +48,11 @@
       "note": "text-to-video that optionally accepts a start image (e.g. Grok Imagine video)",
       "fields": [{ "ref": "prompt", "required": true }, "image_url", "aspect_ratio_video"]
     },
+    "video_grok": {
+      "modality": "video",
+      "note": "Grok Imagine video: text-to-video, optionally with up to 7 reference images (xAI reference_images limit)",
+      "fields": [{ "ref": "prompt", "required": true }, { "ref": "images_list", "max": 7 }, "aspect_ratio_video"]
+    },
     "video_i2v": {
       "modality": "video",
       "fields": [{ "ref": "prompt", "required": true }, { "ref": "image_url", "required": true }, "last_image", "aspect_ratio_video"]
@@ -153,8 +158,8 @@
     "openai-sora-2-pro-image-to-video": "video_i2v",
     "kling-o1-text-to-video": "video_t2v",
     "kling-o1-image-to-video": "video_i2v",
-    "grok-imagine-video": "video_t2v_optimg",
-    "grok-imagine-video-1.5": "video_t2v_optimg",
+    "grok-imagine-video": "video_grok",
+    "grok-imagine-video-1.5": "video_grok",
     "hunyuan-text-to-video": "video_t2v",
     "hunyuan-image-to-video": "video_i2v",
     "midjourney-v7-image-to-video": "video_i2v",

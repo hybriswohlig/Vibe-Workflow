@@ -30,6 +30,7 @@ GROK_HOME = Path(os.getenv("GROK_MEDIA_HOME") or os.path.expanduser("~/.grok"))
 GROK_BIN = os.getenv("GROK_BIN") or str(GROK_HOME / "bin" / "grok")
 XAI_BASE_URL = "https://api.x.ai/v1"
 GROK_MAX_INPUT_IMAGES = 3  # xAI: "This model supports at most 3 input image(s)."
+GROK_MAX_VIDEO_REFS = 7  # xAI: "Maximum allowed is 7." (reference_images for video)
 
 
 class AuthExpired(Exception):
@@ -194,11 +195,17 @@ def do_video(model: str, params: dict, token: str) -> dict:
     body = {"model": model, "prompt": prompt}
     if params.get("aspect_ratio"):
         body["aspect_ratio"] = params["aspect_ratio"]
+    # Grok video takes input images via `reference_images` (the `images`/`image`
+    # fields are deprecated for video); xAI allows up to 7.
     refs = [r for r in [params.get("image_url"), *(params.get("images_list") or [])] if r]
-    if refs:  # image-to-video
-        image = resolve_image_ref(refs[0])
-        if image:
-            body["image"] = {"url": image, "type": "image_url"}
+    if refs:
+        reference_images = []
+        for ref in refs[:GROK_MAX_VIDEO_REFS]:
+            resolved = resolve_image_ref(ref)
+            if resolved:
+                reference_images.append({"url": resolved, "type": "image_url"})
+        if reference_images:
+            body["reference_images"] = reference_images
     status, data = _post("/videos/generations", body, token, TIMEOUT)
     if status in (401, 403):
         raise AuthExpired(str(data)[:300])
