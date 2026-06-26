@@ -175,8 +175,13 @@ export const imageModels = [
     input_params: {}
   },
   {
-    id: "grok-imagine-text-to-image",
+    id: "grok-imagine-image",
     name: "Grok Imagine",
+    input_params: {}
+  },
+  {
+    id: "grok-imagine-image-quality",
+    name: "Grok Imagine Quality",
     input_params: {}
   },
   {
@@ -497,13 +502,13 @@ export const videoModels = [
     input_params: {}
   },
   {
-    id: "grok-imagine-text-to-video",
-    name: "Grok Imagine T2V",
+    id: "grok-imagine-video",
+    name: "Grok Imagine Video",
     input_params: {}
   },
   {
-    id: "grok-imagine-image-to-video",
-    name: "Grok Imagine I2V",
+    id: "grok-imagine-video-1.5",
+    name: "Grok Imagine Video 1.5",
     input_params: {}
   },
   {
