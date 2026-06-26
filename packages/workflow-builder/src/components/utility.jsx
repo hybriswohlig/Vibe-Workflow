@@ -20,8 +20,18 @@ export const imageModels = [
     }
   },
   {
+    id: "gpt-image-2",
+    name: "GPT Image 2",
+    input_params: {}
+  },
+  {
     id: "gpt-image-1.5",
     name: "GPT Image 1.5",
+    input_params: {}
+  },
+  {
+    id: "gpt-image-1-mini",
+    name: "GPT Image 1 Mini",
     input_params: {}
   },
   {

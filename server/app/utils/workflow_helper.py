@@ -166,7 +166,9 @@ VIDEO_COMBINER_INPUTS = {
 
 IMAGE_MODELS = [
     "image-passthrough",
+    "gpt-image-2",
     "gpt-image-1.5",
+    "gpt-image-1-mini",
     "nano-banana",
     "nano-banana-edit",
     "nano-banana-pro",
