@@ -233,10 +233,6 @@ const VideoCombiner = ({ id, data, selected }) => {
   };
 
   const handleRunSingleNode = async () => {
-    if (!runId) {
-      toast.error("No run_id available!. Click 'Run All' button");
-      return;
-    }
     try {
       data.onDataChange(id, { isLoading: true });
       const workflow_id = await data.handleSaveWorkFlow();
@@ -265,7 +261,7 @@ const VideoCombiner = ({ id, data, selected }) => {
       }
 
       const response = await axios.post(`/api/workflow/${workflow_id}/node/${id}/run`, {
-        run_id: runId,
+        run_id: runId || undefined,
         model: selectedModel.id,
         params: params,
         cost: generationCost,
