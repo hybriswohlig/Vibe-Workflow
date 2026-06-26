@@ -14,6 +14,7 @@ On failure: write the reason to stderr and exit non-zero so the server surfaces 
 import base64
 import json
 import os
+import subprocess
 import sys
 import time
 import urllib.error
@@ -26,7 +27,12 @@ ROOT = Path(__file__).resolve().parents[2]
 UPLOADS_DIR = ROOT / "server" / "data" / "uploads"
 PUBLIC_API_BASE_URL = os.getenv("PUBLIC_API_BASE_URL", "http://localhost:8000")
 GROK_HOME = Path(os.getenv("GROK_MEDIA_HOME") or os.path.expanduser("~/.grok"))
+GROK_BIN = os.getenv("GROK_BIN") or str(GROK_HOME / "bin" / "grok")
 XAI_BASE_URL = "https://api.x.ai/v1"
+
+
+class AuthExpired(Exception):
+    """Raised when xAI rejects the token (401/403) so the caller can refresh + retry."""
 TIMEOUT = int(os.getenv("GROK_MEDIA_TIMEOUT", "120"))
 VIDEO_POLL_ATTEMPTS = int(os.getenv("GROK_VIDEO_POLL_ATTEMPTS", "180"))
 VIDEO_POLL_INTERVAL = int(os.getenv("GROK_VIDEO_POLL_INTERVAL", "5"))
@@ -164,9 +170,11 @@ def do_image(model: str, params: dict, token: str) -> dict:
         status, data = _post("/images/edits", body, token, TIMEOUT)
     else:
         status, data = _post("/images/generations", body, token, TIMEOUT)
+    if status in (401, 403):
+        raise AuthExpired(str(data)[:300])
     if status != 200:
         die(f"grok_media: xAI image error {status}: {str(data)[:400]} "
-            "(subscription token may be rejected by api.x.ai — set XAI_API_KEY or use fal)")
+            "(set XAI_API_KEY or use fal if api.x.ai keeps rejecting the token)")
     entry = (data.get("data") or [{}])[0] if isinstance(data, dict) else {}
     suffix = "jpg" if "jpeg" in str(entry.get("mime_type") or "").lower() else "png"
     if entry.get("url"):
@@ -187,6 +195,8 @@ def do_video(model: str, params: dict, token: str) -> dict:
         if image:
             body["image"] = {"url": image, "type": "image_url"}
     status, data = _post("/videos/generations", body, token, TIMEOUT)
+    if status in (401, 403):
+        raise AuthExpired(str(data)[:300])
     if status != 200:
         die(f"grok_media: xAI video error {status}: {str(data)[:400]}")
     if not isinstance(data, dict):
@@ -210,6 +220,32 @@ def do_video(model: str, params: dict, token: str) -> dict:
     return {"video": {"url": save_from_url(url, "mp4")}}
 
 
+def refresh_grok_token() -> None:
+    """Trigger the Grok CLI to refresh ~/.grok auth via a trivial agent call.
+    `grok models` does NOT refresh; a real (single, 1-turn) invocation does."""
+    if not Path(GROK_BIN).exists():
+        return
+    sock = Path(os.getenv("TMPDIR", "/tmp")) / "grok-media-refresh.sock"
+    try:
+        subprocess.run(
+            [GROK_BIN, "-m", "grok-build", "--single", "ok",
+             "--output-format", "plain", "--permission-mode", "dontAsk",
+             "--max-turns", "1", "--no-plan", "--no-subagents", "--no-memory",
+             "--no-alt-screen", "--no-leader", "--leader-socket", str(sock)],
+            capture_output=True, text=True, timeout=90,
+            env={**os.environ, "HOME": str(GROK_HOME.parent),
+                 "PATH": "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"},
+        )
+    except Exception:
+        pass
+
+
+def _generate(model: str, params: dict, token: str) -> dict:
+    if "video" in model:
+        return do_video(model, params, token)
+    return do_image(model, params, token)
+
+
 def main() -> int:
     try:
         payload = json.loads(sys.stdin.read() or "{}")
@@ -224,10 +260,18 @@ def main() -> int:
         die(f"grok_media: no Grok session at {GROK_HOME}/auth.json (run `grok login`) "
             "and no XAI_API_KEY set")
 
-    if "video" in model:
-        result = do_video(model, params, token)
-    else:
-        result = do_image(model, params, token)
+    try:
+        result = _generate(model, params, token)
+    except AuthExpired:
+        # Token expired — refresh via the Grok CLI and retry once.
+        refresh_grok_token()
+        token = read_grok_token() or token
+        try:
+            result = _generate(model, params, token)
+        except AuthExpired as exc:
+            die("grok_media: Grok auth expired and auto-refresh failed — run `grok login`. "
+                f"({str(exc)[:200]})")
+
     print(json.dumps(result))
     return 0
 
