@@ -448,7 +448,10 @@ async def _call_fal(model: str, params: dict, category: str) -> dict:
 
 async def _call_command(command: str, payload: dict, category: str) -> dict:
     try:
-        completed = subprocess.run(
+        # Run the (blocking) media command in a thread so it never blocks the event
+        # loop — long image/video generations must not stall concurrent poll requests.
+        completed = await asyncio.to_thread(
+            subprocess.run,
             shlex.split(command),
             input=json.dumps(payload),
             text=True,
@@ -612,6 +615,9 @@ async def get_run_status_helper(run_id: str):
     return _load_run(run_id)
 
 
+_pending_node_runs: set = set()
+
+
 async def run_node_helper(workflow_id: str, node_id: str, payload: dict):
     run_id = payload.get("run_id") or str(uuid.uuid4())
     run = _read_json(_run_path(run_id), {"run_id": run_id, "workflow_id": workflow_id, "nodes": {}, "status": "running", "created_at": _now()})
@@ -621,11 +627,45 @@ async def run_node_helper(workflow_id: str, node_id: str, payload: dict):
         "model": payload.get("model"),
         "params": payload.get("params", {}),
     }
-    record = await _execute_node(node, run_id, {})
-    run["nodes"].setdefault(node_id, []).append(record)
-    run["status"] = "failed" if record["status"] == "failed" else "succeeded"
+    node_run_id = str(uuid.uuid4())
+
+    # Write a "running" placeholder, return immediately, and finish generation in the
+    # background. Image/video generation can take seconds to minutes; a synchronous
+    # response would outlive the browser request and leave the node output empty.
+    placeholder = _run_record(node_id, "running", _result_from_output("", "text"), run_id)
+    placeholder["node_run_id"] = node_run_id
+    run["nodes"].setdefault(node_id, []).append(placeholder)
+    run["status"] = "running"
+    run["workflow_id"] = workflow_id
     _write_json(_run_path(run_id), run)
-    return {"run_id": run_id, "node_run_id": record["node_run_id"]}
+
+    async def _run_in_background():
+        try:
+            record = await _execute_node(node, run_id, {})
+        except Exception as exc:  # never let a background task die silently
+            record = _run_record(node_id, "failed", _failure_result(str(exc)), run_id)
+        record["node_run_id"] = node_run_id
+        latest = _read_json(_run_path(run_id), run)
+        records = latest["nodes"].setdefault(node_id, [])
+        for index, existing in enumerate(records):
+            if existing.get("node_run_id") == node_run_id:
+                records[index] = record
+                break
+        else:
+            records.append(record)
+        statuses = [recs[-1]["status"] for recs in latest["nodes"].values() if recs]
+        latest["status"] = (
+            "failed" if "failed" in statuses
+            else "running" if "running" in statuses
+            else "succeeded"
+        )
+        _write_json(_run_path(run_id), latest)
+
+    task = asyncio.create_task(_run_in_background())
+    _pending_node_runs.add(task)
+    task.add_done_callback(_pending_node_runs.discard)
+
+    return {"run_id": run_id, "node_run_id": node_run_id}
 
 
 def _category_from_node_id(label: str, model: str) -> str:
