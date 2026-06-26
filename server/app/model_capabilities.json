@@ -33,6 +33,11 @@
       "note": "reference / multi-image driven generation",
       "fields": [{ "ref": "prompt", "required": true }, { "ref": "images_list", "max": 6 }, "aspect_ratio_image"]
     },
+    "image_grok": {
+      "modality": "image",
+      "note": "Grok Imagine: text-to-image that accepts up to 3 reference/edit images (xAI hard limit)",
+      "fields": [{ "ref": "prompt", "required": true }, { "ref": "images_list", "max": 3 }, "aspect_ratio_image"]
+    },
     "video_passthrough": { "modality": "video", "fields": ["video_url"] },
     "video_t2v": {
       "modality": "video",
@@ -113,8 +118,8 @@
     "chroma-image": "image_t2i",
     "kling-o1-text-to-image": "image_t2i",
     "kling-o1-edit-image": "image_edit",
-    "grok-imagine-image": "image_t2i_ref",
-    "grok-imagine-image-quality": "image_t2i_ref",
+    "grok-imagine-image": "image_grok",
+    "grok-imagine-image-quality": "image_grok",
     "hunyuan-image-2.1": "image_t2i",
     "hunyuan-image-3.0": "image_t2i",
     "google-imagen4": "image_t2i",

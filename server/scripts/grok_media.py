@@ -29,6 +29,7 @@ PUBLIC_API_BASE_URL = os.getenv("PUBLIC_API_BASE_URL", "http://localhost:8000")
 GROK_HOME = Path(os.getenv("GROK_MEDIA_HOME") or os.path.expanduser("~/.grok"))
 GROK_BIN = os.getenv("GROK_BIN") or str(GROK_HOME / "bin" / "grok")
 XAI_BASE_URL = "https://api.x.ai/v1"
+GROK_MAX_INPUT_IMAGES = 3  # xAI: "This model supports at most 3 input image(s)."
 
 
 class AuthExpired(Exception):
@@ -162,11 +163,15 @@ def do_image(model: str, params: dict, token: str) -> dict:
     body = {"model": model, "prompt": prompt}
     if params.get("aspect_ratio"):
         body["aspect_ratio"] = params["aspect_ratio"]
-    if refs:  # edit / reference path
-        image = resolve_image_ref(refs[0])
-        if not image:
-            die("grok_media: reference image could not be resolved for edit")
-        body["image"] = {"url": image, "type": "image_url"}
+    if refs:  # edit / reference path — Grok Imagine accepts up to 3 input images
+        images = []
+        for ref in refs[:GROK_MAX_INPUT_IMAGES]:
+            resolved = resolve_image_ref(ref)
+            if resolved:
+                images.append({"url": resolved, "type": "image_url"})
+        if not images:
+            die("grok_media: reference image(s) could not be resolved for edit")
+        body["images"] = images
         status, data = _post("/images/edits", body, token, TIMEOUT)
     else:
         status, data = _post("/images/generations", body, token, TIMEOUT)
