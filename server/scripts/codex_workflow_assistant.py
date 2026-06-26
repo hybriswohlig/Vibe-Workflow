@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import json
 import os
-import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -10,10 +9,11 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 SERVER = ROOT / "server"
 SCHEMA = SERVER / "scripts" / "workflow_assistant_schema.json"
-CODEX = "/opt/homebrew/bin/codex"
-LOCAL_HOME = SERVER / ".assistant-home"
-LOCAL_CODEX_HOME = LOCAL_HOME / ".codex"
-SOURCE_CODEX_HOME = Path("/Users/dariushk/.codex")
+CODEX = os.getenv("CODEX_BIN", "/opt/homebrew/bin/codex")
+# Use the live Codex home so auth stays fresh. The previous isolated
+# .assistant-home copy was only seeded once and its refresh token gets revoked,
+# which made every assistant call fail with 401 "session has ended".
+CODEX_HOME = os.getenv("CODEX_ASSISTANT_HOME") or os.path.expanduser("~/.codex")
 
 
 def load_payload() -> dict:
@@ -43,22 +43,9 @@ def emit_error(message: str, returncode: int = 1) -> int:
     return returncode
 
 
-def prepare_local_home() -> Path:
-    LOCAL_CODEX_HOME.mkdir(parents=True, exist_ok=True)
-    for name in ("auth.json", "config.toml", "version.json"):
-        src = SOURCE_CODEX_HOME / name
-        dst = LOCAL_CODEX_HOME / name
-        if src.exists() and not dst.exists():
-            shutil.copy2(src, dst)
-    for name in ("sessions", "archived_sessions", "cache", "rules", "tmp"):
-        (LOCAL_CODEX_HOME / name).mkdir(parents=True, exist_ok=True)
-    return LOCAL_HOME
-
-
 def main() -> int:
     payload = load_payload()
     workflow = load_workflow(payload.get("workflow_id"))
-    local_home = prepare_local_home()
     prompt = json.dumps(
         {
             "task": (
@@ -97,8 +84,7 @@ def main() -> int:
         timeout=3600,
         env={
             **os.environ,
-            "HOME": str(local_home),
-            "CODEX_HOME": str(LOCAL_CODEX_HOME),
+            "CODEX_HOME": CODEX_HOME,
             "PATH": "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin",
             "TMPDIR": os.environ.get("TMPDIR", "/tmp"),
         },

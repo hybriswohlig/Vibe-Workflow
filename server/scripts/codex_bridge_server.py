@@ -14,6 +14,9 @@ SCHEMA = SERVER / "scripts" / "workflow_assistant_schema.json"
 CODEX_BIN = os.getenv("CODEX_BIN", "/opt/homebrew/bin/codex")
 CODEX_MODEL = os.getenv("CODEX_BRIDGE_MODEL", "gpt-5.5")
 CODEX_SANDBOX = os.getenv("CODEX_BRIDGE_SANDBOX", "read-only")
+# Use the live Codex home so auth stays fresh (avoids the revoked-token issue
+# from the seeded-once .assistant-home copy).
+CODEX_HOME = os.getenv("CODEX_ASSISTANT_HOME") or os.path.expanduser("~/.codex")
 
 
 def load_workflow(workflow_id: str | None):
@@ -72,7 +75,11 @@ def run_codex(payload: dict) -> dict:
         text=True,
         capture_output=True,
         timeout=3600,
-        env={**os.environ, "PATH": "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"},
+        env={
+            **os.environ,
+            "CODEX_HOME": CODEX_HOME,
+            "PATH": "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin",
+        },
     )
 
     if completed.returncode != 0:
